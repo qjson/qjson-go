@@ -118,10 +118,9 @@ func (t token) String() string {
 // A tokenizer produces QJSON tokens from input.
 type tokenizer struct {
 	pos
-	in     []byte // input text
-	p      []byte // text left to parse
-	tk     token
-	margin []byte // small buffer holding the last margin
+	in []byte // input text
+	p  []byte // text left to parse
+	tk token
 }
 
 // init resets the tokenizer. Requires that nexToken() is called afterward.
@@ -130,7 +129,6 @@ func (tk *tokenizer) init(in []byte) {
 	tk.in = in
 	tk.p = tk.in
 	tk.tk = token{}
-	tk.margin = tk.margin[:0]
 }
 
 // whitespace returns the byte size of the first whitechar of p.
