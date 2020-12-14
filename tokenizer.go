@@ -500,10 +500,10 @@ func (tk *tokenizer) skipSpaces() *atError {
 	var ok bool
 	for err == nil && len(tk.p) > 0 {
 		tk.skipWhitespaces()
-		if ok, err = tk.skipLineComment(); ok {
+		if ok, err = tk.skipLineComment(); ok || err != nil {
 			continue
 		}
-		if ok, err = tk.skipMultilineComment(); ok {
+		if ok, err = tk.skipMultilineComment(); ok || err != nil {
 			continue
 		}
 		if !tk.popNewline() {
