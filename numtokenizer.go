@@ -315,15 +315,14 @@ func decodeHexLiteral(v []byte) int {
 		if inRange(v[p], '0', '9') {
 			val = val<<4 | uint64(v[p]-'0')
 			continue
-		} else if x := v[p] & 0b11011111; inRange(x, 'A', 'F') {
-			val = val<<4 | uint64(x-'A') + 10
 		}
+		x := v[p] & 0b11011111
+		val = val<<4 | uint64(x-'A') + 10
 	}
 	if val&0x80000000_00000000 != 0 {
 		return -1
 	}
 	return int(val)
-
 }
 
 func (tk *numTokenizer) nextHexValue() bool {
