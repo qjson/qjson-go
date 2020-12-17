@@ -242,7 +242,7 @@ func isLiteralValue(p []byte) string {
 			return "false"
 		}
 	case 4:
-		if len(p) == 4 && (p[0] == 'n' || p[0] == 'N') &&
+		if (p[0] == 'n' || p[0] == 'N') &&
 			((p[1] == 'u' && p[2] == 'l' && p[3] == 'l') || (p[1] == 'U' && p[2] == 'L' && p[3] == 'L')) {
 			return "null"
 		}

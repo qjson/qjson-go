@@ -31,7 +31,7 @@ Current limitation:
 - multiline strings are not yet supported
 
 
-## Usage 
+## Usage 
 
 You need to get the QJSON package if the go tools can’t find it by themselves.
 
@@ -108,6 +108,6 @@ small. For syntax modification requests or problems fill an issue in the
 
 Any contribution is welcome. 
 
-## License
+## License
 
 The licences is the 3-BSD clause. 
