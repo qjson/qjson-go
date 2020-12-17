@@ -14,6 +14,9 @@ func Decode(input []byte) ([]byte, error) {
 	var e engine
 	e.init(input)
 	e.members()
+	if e.token().tag == tagCloseBrace {
+		e.setError(ErrSyntaxError)
+	}
 	t := e.token()
 	if t.tag == tagError && t.val.(error) != ErrEndOfInput {
 		return nil, fmt.Errorf("%w at line %d col %d", t.val.(error), t.pos.l+1, column(e.in[t.pos.s:t.pos.b])+1)
