@@ -136,6 +136,8 @@ func TestNumberEval(t *testing.T) {
 		// 75
 		{in: "6 7", err: ErrInvalidNumericExpression, pos: 2},
 		{in: "1.3 5h", err: ErrInvalidNumericExpression, pos: 4},
+		{in: "(2 + 3)*2", out: 10},
+		{in: "1.3 + 1h", out: 3601.3},
 	}
 	for i, test := range tests {
 		out, pos, err := evalNumberExpression([]byte(test.in))
