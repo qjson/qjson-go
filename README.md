@@ -1,46 +1,46 @@
-# QJSON to JSON converter
+# qjson to json converter
 
-[JSON](https://www.json.org) is a very popular data encoding with a good support in many 
+[json](https://www.json.org) is a very popular data encoding with a good support in many 
 programming languages. It may thus seam a good idea to use it for manually managed 
-data like configuration files. Unfortunately, JSON is not very convenient for such 
+data like configuration files. Unfortunately, json is not very convenient for such 
 application because every string must be quoted and elements must be separated by commas. 
 It is easy to parse by a program and to verify that it is correct, but it’s not connvenient
 to write. 
 
-For this reason, different alternatives to JSON have been proposed which are more human 
-friendly like [YAML] or [HJSON](https://hjson.github.io/) for instance. 
+For this reason, different alternatives to json have been proposed which are more human 
+friendly like [yaml](https://yaml.org/), [toml](https://toml.io/en/) or 
+[hjson](https://hjson.github.io/) for instance. 
 
-QJSON is inspired by HJSON, and you should be able to parse HJSON text with QJSON. 
-It differs from HJSON by extending its functionality and relaxing some rules.
+qjson is inspired by hjson by being a human readable and extended json. The difference 
+between qjson and hjson is that qjson extends its functionality and relax some rules.
 
-Here is a list of QJSON text properties:
+Here is a list of qjson text properties:
 
 - comments of the form //...  #... or /*...*/
 - commas between array values and object members are optional 
 - double quote, single quote and quoteless strings
 - non-breaking space is considered as a white space character
 - newline is \n or \r\n, report \r alone or \n\r as an error
-- numbers are decimal, floating point, hexadecimal, octal or binary
+- numbers are integer, floating point, hexadecimal, octal or binary
 - numbers may contain underscore '_' as separator
-- numbers may be simple mathematical expression
-- member identifiers may be quoteless strings
-
-Current limitation:
-
-- the backspace or formfeed control characters are invalid
-- multiline strings are not yet supported
-
+- numbers may be simple mathematical expression with parenthesis
+- member identifiers may be quoteless strings including spaces
+- the newline type in multiline string is explicitely specified
+- backspace and form feed controls are invalid characters except
+  in /*...*/ comments or multiline strings
 
 ## Usage 
 
-You need to get the QJSON package if the go tools can’t find it by themselves.
+If Go can’t find the qjson package by itself, you may get it with
+the following command.
 
-`go got github.com/chmike/QJSON-go`
+`go get github.com/qjson/qjson-go`
 
 
-The API is a single function:
+The API is a single function that receive the qjson text as input and
+returns the corresponding json string or an error message.
 
-`QJSON.Decode(QJSONText []byte) (jsonText []byte, err error)` 
+`qjson.Decode(qjsonText []byte) (jsonText []byte, err error)` 
 
 Here is an example of usage:
 
@@ -76,35 +76,35 @@ func main() {
 qjson-go imports only standard packages. There are no 
 dependencies with other packages. 
 
-Positive feedbacks like that you are using QJSON are welcome in the issues. 
-
 ## Syntax 
 
-**This package supports QJSON syntax v0.0.0"**
+**This package supports qjson syntax v0.0.0"**
 
-THe QJSON syntax is described in the 
+THe qjson syntax is described in the 
 [qjson-syntax project](http://github.com/qjson/qjson-syntax).
 
-Take care to read the syntax specification supported
-by this package as the syntax may evolve and be ahead.
+Check the syntax version supported by the package since
+the syntax may evolve. 
 
 ## Reliability
 
 qjson-go has been extensively tested with manualy defined tests (100% coverage), 
-and go-fuzz running for longer than 10 hours and continuing. The number of bugs
+and go-fuzz running for longer than a day and continuing. The number of bugs
 left should be very small. 
 
-For bug reports in this QJSON-go package, fill an issue in this project. 
+For bug reports in this qjson-go package, fill an issue in this project. 
 
 The things you may still find are discordance between the syntax specification 
 and the go implementation, or unclear of confusing error messages. 
 
 ## Contributing
 
-QJSON is a recently developped package. It is thus a good time to 
+qjson is a recently developped package. It is thus a good time to 
 suggest changes or extensions to the syntax since the user base is very
-small. For syntax modification requests or problems fill an issue in the 
-[QJSON-syntax project](http://github.com/chmike/QJSON-syntax).
+small. 
+
+For suggestions or problems relative to syntax, fill an issue in the 
+[qjson-syntax project](http://github.com/qjson/qjson-syntax).
 
 Any contribution is welcome. 
 
