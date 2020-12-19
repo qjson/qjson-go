@@ -1,3 +1,3 @@
-module github.com/chmike/qjson
+module github.com/qjson/qjson-go
 
 go 1.15
