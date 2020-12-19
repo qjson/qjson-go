@@ -140,8 +140,8 @@ var tkOpTable = [256]tokenTag{
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 30
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 40
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, tagXor, 0, // 50
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 60
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, tagOr, 0, tagInverse, 0, // 70
+	0, 0, 0, 0, tagDays, 0, 0, 0, tagHours, 0, 0, 0, 0, tagMinutes, 0, 0, // 60
+	0, 0, 0, tagSeconds, 0, 0, 0, tagWeeks, 0, 0, 0, 0, tagOr, 0, tagInverse, 0, // 70
 }
 
 // nextOperator returns true and pops the operator if tk.p start with

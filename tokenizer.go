@@ -37,6 +37,11 @@ const (
 	tagModulo
 	tagOpenParen
 	tagCloseParen
+	tagWeeks
+	tagDays
+	tagHours
+	tagMinutes
+	tagSeconds
 	tagOpenBrace
 	tagCloseBrace
 	tagOpenSquare
@@ -65,6 +70,11 @@ var tagStr = map[tokenTag]string{
 	tagModulo:             "tagModulo",
 	tagOpenParen:          "tagOpenParen",
 	tagCloseParen:         "tagCloseParen",
+	tagWeeks:              "tagWeeks",
+	tagDays:               "tagDays",
+	tagHours:              "tagHours",
+	tagMinutes:            "tagMinutes",
+	tagSeconds:            "tagSeconds",
 	tagOpenBrace:          "tagOpenBrace",
 	tagCloseBrace:         "tagCloseBrace",
 	tagOpenSquare:         "tagOpenSquare",

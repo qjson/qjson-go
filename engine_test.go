@@ -234,6 +234,7 @@ func TestDecode(t *testing.T) {
 		{in: "a:{b:c,}", err: "expect identifier after comma at line 1 col 8"},
 		// 45
 		{in: "a:{b:}", err: "unexpected } at line 1 col 6"},
+		{in: "a:b}", err: "unexpected } at line 1 col 4"},
 	}
 
 	for i, test := range tests {

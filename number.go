@@ -1,8 +1,14 @@
 package qjson
 
+import (
+	"fmt"
+	"reflect"
+)
+
 // inspired by https://eli.thegreenplace.net/2010/01/02/top-down-operator-precedence-parsing
 
 // operator precedence
+// 3             w  d  h  m  s
 // 2             *  /  %  <<  >>  &  &^
 // 1             +  -  |  ^  ~
 // 0
@@ -22,9 +28,14 @@ var precedenceTable = [256]byte{
 	2, // tagModulo
 	0, // tagOpenParen
 	0, // tagCloseParen
+	3, // tagWeeks
+	3, // tagDays
+	3, // tagHours
+	3, // tagMinutes
+	3, // tagSeconds
 }
 
-const highestPrecedence = 2
+const highestPrecedence = 3
 
 // A nudXXX function returns the result of evaluating the expression at the current
 // location. It returns nil when the end is reached or an error occured, otherwise
@@ -44,21 +55,26 @@ var ledTable = [256]ledFunc{}
 // to get rid of initialization cycle error
 func init() {
 	nudTable = [256]nudFunc{
-		nil,          // tagUnknown
-		nil,          // tagError
-		nudValue,     // tagIntegerVal
-		nudValue,     // tagDecimalVal
-		nudPlus,      // tagPlus
-		nudMinus,     // tagMinus
-		nil,          // tagMultiplication
-		nil,          // tagDivision
-		nil,          // tagXor
-		nil,          // tagAnd
-		nil,          // tagOr
-		nudInverse,   // tagInverse
-		nil,          // tagModulo
-		nudOpenParen, // tagOpenParen
-		nil,          // tagCloseParen
+		nil,           // tagUnknown
+		nil,           // tagError
+		nudValue,      // tagIntegerVal
+		nudValue,      // tagDecimalVal
+		nudPlus,       // tagPlus
+		nudMinus,      // tagMinus
+		nil,           // tagMultiplication
+		nil,           // tagDivision
+		nil,           // tagXor
+		nil,           // tagAnd
+		nil,           // tagOr
+		nudInverse,    // tagInverse
+		nil,           // tagModulo
+		nudOpenParen,  // tagOpenParen
+		nudCloseParen, // tagCloseParen
+		nil,           // tagWeeks
+		nil,           // tagDays
+		nil,           // tagHours
+		nil,           // tagMinutes
+		nil,           // tagSeconds
 	}
 	ledTable = [256]ledFunc{
 		nil,               // tagUnknown
@@ -76,6 +92,11 @@ func init() {
 		ledModulo,         // tagModulo
 		nil,               // tagOpenParen
 		nil,               // tagCloseParen
+		ledWeeks,          // tagWeeks
+		ledDays,           // tagDays
+		ledHours,          // tagHours
+		ledMinutes,        // tagMinutes
+		ledSeconds,        // tagSeconds
 	}
 }
 
@@ -120,15 +141,19 @@ func (tk *numTokenizer) expression(rbp byte) interface{} {
 // return the resulting value, otherwise reture the error and
 // its index in the input.
 func evalNumberExpression(input []byte) (float64, int, error) {
-	if pos, err := checkCloseParenthesis(input); err != nil {
-		return 0, pos, err
-	}
 	var tk numTokenizer
 	tk.init(input)
 	tk.nextToken()
 	res := tk.expression(0)
-	if tk.tk.tag == tagError && tk.tk.val.(error) != ErrEndOfInput {
-		return 0, tk.tk.pos, tk.tk.val.(error)
+	if tk.tk.tag == tagError {
+		if tk.tk.val.(error) != ErrEndOfInput {
+			return 0, tk.tk.pos, tk.tk.val.(error)
+		}
+	} else {
+		if tk.tk.tag == tagCloseParen {
+			return 0, tk.tk.pos, ErrUnopenedParenthesis
+		}
+		return 0, tk.tk.pos, ErrInvalidNumericExpression
 	}
 	switch res.(type) {
 	case int:
@@ -137,21 +162,6 @@ func evalNumberExpression(input []byte) (float64, int, error) {
 		return res.(float64), 0, nil
 	}
 	return 0, tk.tk.pos, tk.tk.val.(error)
-}
-
-func checkCloseParenthesis(v []byte) (int, error) {
-	var paren int
-	for i := 0; i < len(v); i++ {
-		if v[i] == '(' {
-			paren++
-		} else if v[i] == ')' {
-			if paren == 0 {
-				return i, ErrUnopenedParenthesis
-			}
-			paren--
-		}
-	}
-	return 0, nil
 }
 
 // normalizeTypes ensures that v1 anv v2 are both int, otherwise cast both to float64.
@@ -281,7 +291,13 @@ func nudOpenParen(tk *numTokenizer, t numToken) interface{} {
 		tk.setErrorAndPos(ErrUnclosedParenthesis, t.pos)
 		return nil
 	}
+	tk.nextToken()
 	return right
+}
+
+func nudCloseParen(tk *numTokenizer, t numToken) interface{} {
+	tk.setErrorAndPos(ErrUnopenedParenthesis, t.pos)
+	return nil
 }
 
 func nudInverse(tk *numTokenizer, t numToken) interface{} {
@@ -367,4 +383,76 @@ func ledXor(tk *numTokenizer, t numToken, left interface{}) interface{} {
 	}
 	tk.setErrorAndPos(ErrOperandsMustBeInteger, t.pos)
 	return nil
+}
+
+func toFloat64(v interface{}) float64 {
+	switch v.(type) {
+	case int:
+		return float64(v.(int))
+	case float64:
+		return v.(float64)
+	case nil:
+		panic("invalid nil value")
+	default:
+		panic(fmt.Sprintf("invalid type %v", reflect.TypeOf(v)))
+	}
+}
+
+func ledWeeks(tk *numTokenizer, t numToken, left interface{}) interface{} {
+	const duration float64 = 3600 * 24 * 7
+	right := tk.expression(precedenceTable[tagWeeks])
+	if right == nil { // right hand operand is optional
+		if tk.tk.val.(error) == ErrEndOfInput {
+			return toFloat64(left) * duration
+		}
+		return nil
+	}
+	return toFloat64(left)*duration + toFloat64(right)
+}
+
+func ledDays(tk *numTokenizer, t numToken, left interface{}) interface{} {
+	const duration float64 = 3600 * 24
+	right := tk.expression(precedenceTable[tagDays])
+	if right == nil { // right hand operand is optional
+		if tk.tk.val.(error) == ErrEndOfInput {
+			return toFloat64(left) * duration
+		}
+		return nil
+	}
+	return toFloat64(left)*duration + toFloat64(right)
+}
+
+func ledHours(tk *numTokenizer, t numToken, left interface{}) interface{} {
+	const duration float64 = 3600
+	right := tk.expression(precedenceTable[tagDays])
+	if right == nil { // right hand operand is optional
+		if tk.tk.val.(error) == ErrEndOfInput {
+			return toFloat64(left) * duration
+		}
+		return nil
+	}
+	return toFloat64(left)*duration + toFloat64(right)
+}
+
+func ledMinutes(tk *numTokenizer, t numToken, left interface{}) interface{} {
+	const duration float64 = 60
+	right := tk.expression(precedenceTable[tagDays])
+	if right == nil { // right hand operand is optional
+		if tk.tk.val.(error) == ErrEndOfInput {
+			return toFloat64(left) * duration
+		}
+		return nil
+	}
+	return toFloat64(left)*duration + toFloat64(right)
+}
+
+func ledSeconds(tk *numTokenizer, t numToken, left interface{}) interface{} {
+	right := tk.expression(precedenceTable[tagDays])
+	if right == nil { // right hand operand is optional
+		if tk.tk.val.(error) == ErrEndOfInput {
+			return toFloat64(left)
+		}
+		return nil
+	}
+	return toFloat64(left) + toFloat64(right)
 }

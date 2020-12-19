@@ -15,7 +15,7 @@ func Decode(input []byte) ([]byte, error) {
 	e.init(input)
 	e.members()
 	if e.token().tag == tagCloseBrace {
-		e.setError(ErrSyntaxError)
+		e.setError(ErrUnexpectedCloseBrace)
 	}
 	t := e.token()
 	if t.tag == tagError && t.val.(error) != ErrEndOfInput {

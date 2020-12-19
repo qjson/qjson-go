@@ -6,6 +6,35 @@ import (
 	"testing"
 )
 
+func doesPanic(f func()) (res bool) {
+	defer func() {
+		if r := recover(); r == nil {
+			res = false
+		} else {
+			res = true
+		}
+	}()
+	f()
+	return false
+}
+
+func TestToFloat64(t *testing.T) {
+	x := toFloat64(10)
+	if x != 10. {
+		t.Fatal("invalid output value")
+	}
+	x = toFloat64(5.2)
+	if x != 5.2 {
+		t.Fatal("invalid output value")
+	}
+	if !doesPanic(func() { toFloat64(nil) }) {
+		t.Fatal("invalid output value")
+	}
+	if !doesPanic(func() { toFloat64("test") }) {
+		t.Fatal("invalid output value")
+	}
+}
+
 func TestNumberEval(t *testing.T) {
 	tests := []struct {
 		in  string
@@ -13,6 +42,7 @@ func TestNumberEval(t *testing.T) {
 		pos int
 		err error
 	}{
+		{in: ") ", err: ErrUnopenedParenthesis, pos: 0},
 		// 0
 		{in: "", err: ErrEndOfInput},
 		{in: " ", err: ErrEndOfInput, pos: 1},
@@ -85,6 +115,27 @@ func TestNumberEval(t *testing.T) {
 		{in: "10 / 0", err: ErrDivisionByZero, pos: 3},  // go-fuzz
 		{in: "+", err: ErrInvalidNumericExpression},
 		{in: "10 - +5", out: 5},
+		// 60
+		{in: "2m", out: 120},
+		{in: "2m 15", out: 135},
+		{in: "2m a", err: ErrInvalidNumericExpression, pos: 3},
+		{in: "1h", out: 3600},
+		{in: "1h 10", out: 3610},
+		// 65
+		{in: "2h a", err: ErrInvalidNumericExpression, pos: 3},
+		{in: "1d", out: 86400},
+		{in: "1d 10", out: 86410},
+		{in: "2d a", err: ErrInvalidNumericExpression, pos: 3},
+		{in: "1w", out: 604800},
+		// 70
+		{in: "1w 10", out: 604810},
+		{in: "2w a", err: ErrInvalidNumericExpression, pos: 3},
+		{in: "1 s", out: 1},
+		{in: "1s 10", out: 11},
+		{in: "2s a", err: ErrInvalidNumericExpression, pos: 3},
+		// 75
+		{in: "6 7", err: ErrInvalidNumericExpression, pos: 2},
+		{in: "1.3 5h", err: ErrInvalidNumericExpression, pos: 4},
 	}
 	for i, test := range tests {
 		out, pos, err := evalNumberExpression([]byte(test.in))
