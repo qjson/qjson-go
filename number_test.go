@@ -42,7 +42,6 @@ func TestNumberEval(t *testing.T) {
 		pos int
 		err error
 	}{
-		{in: ") ", err: ErrUnopenedParenthesis, pos: 0},
 		// 0
 		{in: "", err: ErrEndOfInput},
 		{in: " ", err: ErrEndOfInput, pos: 1},
@@ -138,6 +137,11 @@ func TestNumberEval(t *testing.T) {
 		{in: "1.3 5h", err: ErrInvalidNumericExpression, pos: 4},
 		{in: "(2 + 3)*2", out: 10},
 		{in: "1.3 + 1h", out: 3601.3},
+		{in: "2020-12-23T15:40:05", out: 1608738005},
+		// 80
+		{in: "2020-12-23T15:40:05 + 2m", out: 1608738125},
+		{in: "2020-12-23T25:40:05", err: ErrInvalidISODateTime, pos: 0},
+		{in: "2020-12-23T15:40:60", err: ErrInvalidISODateTime, pos: 0},
 	}
 	for i, test := range tests {
 		out, pos, err := evalNumberExpression([]byte(test.in))

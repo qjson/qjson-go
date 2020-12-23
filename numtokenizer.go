@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // The tokenizer is used only for numbers and arithmetic operations.
@@ -126,7 +127,7 @@ func (tk *numTokenizer) nextToken() {
 		return
 	}
 
-	if !tk.nextOperator() && !tk.nextBinValue() && !tk.nextHexValue() &&
+	if !tk.nextISODateTimeValue() && !tk.nextOperator() && !tk.nextBinValue() && !tk.nextHexValue() &&
 		!tk.nextDecValue() && !tk.nextOctValue() && !tk.nextIntValue() {
 		tk.setError(ErrInvalidNumericExpression)
 	}
@@ -624,6 +625,113 @@ func (tk *numTokenizer) nextDecValue() bool {
 	val := decodeDecLiteral(tk.p[:n])
 	if val < 0 {
 		tk.setError(ErrInvalidDecimalNumber)
+		return true
+	}
+	tk.setToken(tagDecimalVal, val)
+	tk.popBytes(n)
+	return true
+}
+
+// see https://fr.wikipedia.org/wiki/ISO_8601 (ex: 1997−07−16T19:20+01:00) RFC3339
+func parseISODateTimeLiteral(v []byte) int {
+	// must start with date
+	if len(v) < 11 || v[10] != 'T' || v[4] != '-' || v[7] != '-' ||
+		!isIntDigit(v[0]) || !isIntDigit(v[1]) || !isIntDigit(v[2]) || !isIntDigit(v[3]) ||
+		!isIntDigit(v[5]) || !isIntDigit(v[6]) || !isIntDigit(v[8]) || !isIntDigit(v[9]) {
+		return 0
+	}
+	n := 11
+	v = v[11:]
+	if len(v) == 0 {
+		return n
+	}
+	if len(v) < 8 || !isIntDigit(v[0]) || !isIntDigit(v[1]) || !isIntDigit(v[3]) || !isIntDigit(v[4]) ||
+		!isIntDigit(v[6]) || !isIntDigit(v[7]) || v[2] != ':' || v[5] != ':' {
+		return n
+	}
+	if inRange(v[0], '3', '9') || (v[0] == '2' && inRange(v[1], '5', '9')) ||
+		inRange(v[3], '6', '9') || inRange(v[6], '7', '9') || (v[6] == '6' && inRange(v[7], '1', '9')) {
+		return -1
+	}
+	n += 8
+	v = v[8:]
+	if len(v) == 0 {
+		return n
+	}
+	// optional decimals
+	if v[0] == '.' {
+		n++
+		v = v[1:]
+		var p int
+		for len(v) > p && isIntDigit(v[p]) {
+			p++
+		}
+		if p != 6 && p != 3 {
+			return -1
+		}
+		n += p
+		v = v[p:]
+	}
+	if len(v) == 0 {
+		return n
+	}
+	if v[0] == 'Z' {
+		return n + 1
+	}
+	// optional time offset
+	if v[0] == '+' || v[0] == '-' {
+		n++
+		v = v[1:]
+		if len(v) < 5 || v[2] != ':' || !inRange(v[0], '0', '1') || !isIntDigit(v[1]) ||
+			!inRange(v[3], '0', '5') || !isIntDigit(v[4]) {
+			return -1
+		}
+		n += 5
+	}
+	return n
+}
+
+// return -1 if decoding failed
+func decodeISODateTimeLiteral(v []byte) float64 {
+	s := string(v)
+	var t time.Time
+	var err error
+	layouts := []string{
+		"2006-01-02T15:04:05.999999Z",
+		"2006-01-02T15:04:05.999Z",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05.999999-07:00",
+		"2006-01-02T15:04:05.999-07:00",
+		"2006-01-02T15:04:05-07:00",
+		"2006-01-02T15:04:05.000000",
+		"2006-01-02T15:04:05.000",
+		"2006-01-02T15:04:05",
+		"2006-01-02T",
+	}
+	for _, layout := range layouts {
+		t, err = time.Parse(layout, s)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return -1
+	}
+	return float64(t.Unix()) + float64(t.Nanosecond())/1E9
+}
+
+func (tk *numTokenizer) nextISODateTimeValue() bool {
+	n := parseISODateTimeLiteral(tk.p)
+	if n == 0 {
+		return false
+	}
+	if n < 0 {
+		tk.setError(ErrInvalidISODateTime)
+		return true
+	}
+	val := decodeISODateTimeLiteral(tk.p[:n])
+	if val < 0 {
+		tk.setError(ErrInvalidISODateTime)
 		return true
 	}
 	tk.setToken(tagDecimalVal, val)

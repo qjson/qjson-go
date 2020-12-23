@@ -56,6 +56,7 @@ var errMap = map[Error]string{
 	ErrInvalidMultilineStart:      "ErrInvalidMultilineStart",
 	ErrUnexpectedCloseBrace:       "ErrUnexpectedCloseBrace",
 	ErrUnexpectedCloseSquare:      "ErrUnexpectedCloseSquare",
+	ErrInvalidISODateTime:         "ErrInvalidISODateTime",
 }
 
 func errStr(e error) string {
@@ -182,8 +183,11 @@ const ErrInvalidNewlineSpecifier = Error("expect \\n or \\r\\n after `")
 // ErrInvalidMultilineStart is returned when non whitespace or line comments follow the opening `.
 const ErrInvalidMultilineStart = Error("invalid multiline start line")
 
-// ErrUnexpectedCloseBrace is return when } is met where a value is expected.
+// ErrUnexpectedCloseBrace is returned when } is met where a value is expected.
 const ErrUnexpectedCloseBrace = Error("unexpected }")
 
-// ErrUnexpectedCloseSquare is return when } is met where a value is expected.
+// ErrUnexpectedCloseSquare is returned when } is met where a value is expected.
 const ErrUnexpectedCloseSquare = Error("unexpected ]")
+
+// ErrInvalidISODateTime is returned when the parsed ISO date time is invalid.
+const ErrInvalidISODateTime = Error("invalid ISO date time")

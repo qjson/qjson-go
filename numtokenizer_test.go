@@ -775,6 +775,58 @@ func TestNextDecValue(t *testing.T) {
 	}
 }
 
+func TestParseISODateTime(t *testing.T) {
+	tests := []struct {
+		in  string
+		out int
+	}{
+		// 0
+		{in: "", out: 0},
+		{in: "a", out: 0},
+		{in: "2020-12-23T", out: 11},
+		{in: "2020-12-23Ta", out: 11},
+		{in: "2020-12-23T15:36:00", out: 19},
+		// 5
+		{in: "2020-12-23T15:36:00Z", out: 20},
+		{in: "2020-12-23T25:36:00Z", out: -1},
+		{in: "2020-12-23T15:36:00.123456", out: 26},
+		{in: "2020-12-23T15:36:00.123456Z", out: 27},
+		{in: "2020-12-23T15:36:00+97:00", out: -1},
+		// 10
+		{in: "2020-12-23T15:36:00+07:00", out: 25},
+		{in: "2020-12-23T15:36:00.123456-01:00", out: 32},
+		{in: "2020-12-23T15:36:00.12", out: -1},
+	}
+	for i, test := range tests {
+		if out := parseISODateTimeLiteral([]byte(test.in)); out != test.out {
+			t.Fatalf("%d expect %d, got %d", i, test.out, out)
+		}
+	}
+}
+
+func TestDecodeISODateTime(t *testing.T) {
+	tests := []struct {
+		in  string
+		out float64
+	}{
+		// 0
+		{in: "2020-12-23T", out: 1608681600},
+		{in: "2020-12-23T15:36:00", out: 1608737760},
+		{in: "2020-12-23T15:36:00Z", out: 1608737760},
+		{in: "2020-12-23T15:36:00.123456", out: 1608737760.123456},
+		{in: "2020-12-23T15:36:00.123456Z", out: 1608737760.123456},
+		// 5
+		{in: "2020-12-23T15:36:00+01:00", out: 1608734160},
+		{in: "2020-12-23T15:36:00.123456+01:00", out: 1608734160.123456},
+		{in: "2020-12-23T15:36:60.123456+01:00", out: -1},
+	}
+	for i, test := range tests {
+		if out := decodeISODateTimeLiteral([]byte(test.in)); out != test.out {
+			t.Fatalf("%d expect %.16g, got %.16g", i, test.out, out)
+		}
+	}
+}
+
 func TestNumTokenizer(t *testing.T) {
 	var tk numTokenizer
 	tests := []struct {
@@ -850,5 +902,4 @@ func TestNumTokenizer(t *testing.T) {
 	if !reflect.DeepEqual(tk.token(), tmp) {
 		t.Fatalf("expect numToken %v, got %v", tmp, tk.token())
 	}
-
 }
