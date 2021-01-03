@@ -28,14 +28,14 @@ var precedenceTable = [256]byte{
 	2, // tagModulo
 	0, // tagOpenParen
 	0, // tagCloseParen
-	3, // tagWeeks
-	3, // tagDays
-	3, // tagHours
-	3, // tagMinutes
-	3, // tagSeconds
+	4, // tagWeeks
+	4, // tagDays
+	4, // tagHours
+	4, // tagMinutes
+	4, // tagSeconds
 }
 
-const highestPrecedence = 3
+const highestPrecedence = 4
 
 // A nudXXX function returns the result of evaluating the expression at the current
 // location. It returns nil when the end is reached or an error occured, otherwise
@@ -123,10 +123,10 @@ func (tk *numTokenizer) led(t numToken, left interface{}) interface{} {
 // an error condition has been detected, or the result of the expression
 // evaluation.
 func (tk *numTokenizer) expression(rbp byte) interface{} {
-	t := tk.token()
 	if tk.done() {
 		return nil
 	}
+	t := tk.token()
 	tk.nextToken()
 	left := tk.nud(t)
 	for left != nil && rbp < precedenceTable[tk.token().tag] {
@@ -400,59 +400,79 @@ func toFloat64(v interface{}) float64 {
 
 func ledWeeks(tk *numTokenizer, t numToken, left interface{}) interface{} {
 	const duration float64 = 3600 * 24 * 7
-	right := tk.expression(precedenceTable[tagWeeks])
+	leftFloat := toFloat64(left)
+	if tk.tk.tag == tagCloseParen {
+		return leftFloat * duration
+	}
+	right := tk.expression(precedenceTable[tagWeeks] - 1)
 	if right == nil { // right hand operand is optional
 		if tk.tk.val.(error) == ErrEndOfInput {
-			return toFloat64(left) * duration
+			return leftFloat * duration
 		}
 		return nil
 	}
-	return toFloat64(left)*duration + toFloat64(right)
+	return leftFloat*duration + toFloat64(right)
 }
 
 func ledDays(tk *numTokenizer, t numToken, left interface{}) interface{} {
 	const duration float64 = 3600 * 24
-	right := tk.expression(precedenceTable[tagDays])
+	leftFloat := toFloat64(left)
+	if tk.tk.tag == tagCloseParen {
+		return leftFloat * duration
+	}
+	right := tk.expression(precedenceTable[tagDays] - 1)
 	if right == nil { // right hand operand is optional
 		if tk.tk.val.(error) == ErrEndOfInput {
-			return toFloat64(left) * duration
+			return leftFloat * duration
 		}
 		return nil
 	}
-	return toFloat64(left)*duration + toFloat64(right)
+	return leftFloat*duration + toFloat64(right)
 }
 
 func ledHours(tk *numTokenizer, t numToken, left interface{}) interface{} {
 	const duration float64 = 3600
-	right := tk.expression(precedenceTable[tagDays])
+	leftFloat := toFloat64(left)
+	if tk.tk.tag == tagCloseParen {
+		return leftFloat * duration
+	}
+	right := tk.expression(precedenceTable[tagHours] - 1)
 	if right == nil { // right hand operand is optional
 		if tk.tk.val.(error) == ErrEndOfInput {
-			return toFloat64(left) * duration
+			return leftFloat * duration
 		}
 		return nil
 	}
-	return toFloat64(left)*duration + toFloat64(right)
+	return leftFloat*duration + toFloat64(right)
 }
 
 func ledMinutes(tk *numTokenizer, t numToken, left interface{}) interface{} {
 	const duration float64 = 60
-	right := tk.expression(precedenceTable[tagDays])
+	leftFloat := toFloat64(left)
+	if tk.tk.tag == tagCloseParen {
+		return leftFloat * duration
+	}
+	right := tk.expression(precedenceTable[tagMinutes] - 1)
 	if right == nil { // right hand operand is optional
 		if tk.tk.val.(error) == ErrEndOfInput {
-			return toFloat64(left) * duration
+			return leftFloat * duration
 		}
 		return nil
 	}
-	return toFloat64(left)*duration + toFloat64(right)
+	return leftFloat*duration + toFloat64(right)
 }
 
 func ledSeconds(tk *numTokenizer, t numToken, left interface{}) interface{} {
-	right := tk.expression(precedenceTable[tagDays])
+	leftFloat := toFloat64(left)
+	if tk.tk.tag == tagCloseParen {
+		return leftFloat
+	}
+	right := tk.expression(precedenceTable[tagSeconds] - 1)
 	if right == nil { // right hand operand is optional
 		if tk.tk.val.(error) == ErrEndOfInput {
-			return toFloat64(left)
+			return leftFloat
 		}
 		return nil
 	}
-	return toFloat64(left) + toFloat64(right)
+	return leftFloat + toFloat64(right)
 }

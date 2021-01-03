@@ -137,8 +137,21 @@ func TestNumberEval(t *testing.T) {
 		{in: "1.3 5h", err: ErrInvalidNumericExpression, pos: 4},
 		{in: "(2 + 3)*2", out: 10},
 		{in: "1.3 + 1h", out: 3601.3},
-		{in: "2020-12-23T15:40:05", out: 1608738005},
+		{in: "1h 2m 2s", out: 3722},
 		// 80
+		{in: "1h 2m 2s + 4", out: 3726},
+		{in: "(1m) * 2", out: 120},
+		{in: "(1h 2m 2s) * 2", out: 7444},
+		{in: "1h 2m 2s - 2", out: 3720},
+		{in: "-(1h 2m 2s)", out: -3722},
+		// 85
+		{in: "-1h 2m 2s", out: -3478},
+		{in: "(1w) * 2", out: 1209600},
+		{in: "(1d) * 2", out: 172800},
+		{in: "(1h) * 2", out: 7200},
+		{in: "1h 2m 2s * 3", err: ErrInvalidNumericExpression, pos: 9},
+		// 90
+		{in: "2020-12-23T15:40:05", out: 1608738005},
 		{in: "2020-12-23T15:40:05 + 2m", out: 1608738125},
 		{in: "2020-12-23T25:40:05", err: ErrInvalidISODateTime, pos: 0},
 		{in: "2020-12-23T15:40:60", err: ErrInvalidISODateTime, pos: 0},
