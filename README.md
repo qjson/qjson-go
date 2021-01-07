@@ -28,6 +28,8 @@ Here is a list of qjson text properties:
 - the newline type in multiline string is explicitely specified
 - backspace and form feed controls are invalid characters except
   in /*...*/ comments or multiline strings
+- time durations expressed with w, d, h, m, s suffix are converted to seconds
+- time specified in ISO format is converted to UTC time is seconds
 
 ## Usage 
 
