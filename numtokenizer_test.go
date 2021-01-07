@@ -788,14 +788,15 @@ func TestParseISODateTime(t *testing.T) {
 		{in: "2020-12-23T15:36:00", out: 19},
 		// 5
 		{in: "2020-12-23T15:36:00Z", out: 20},
-		{in: "2020-12-23T25:36:00Z", out: -1},
+		{in: "2020-12-23T25:36Z", out: 17},
 		{in: "2020-12-23T15:36:00.123456", out: 26},
 		{in: "2020-12-23T15:36:00.123456Z", out: 27},
-		{in: "2020-12-23T15:36:00+97:00", out: -1},
+		{in: "2020-12-23T15:36:00+97:00", out: 25},
 		// 10
 		{in: "2020-12-23T15:36:00+07:00", out: 25},
 		{in: "2020-12-23T15:36:00.123456-01:00", out: 32},
 		{in: "2020-12-23T15:36:00.12", out: -1},
+		{in: "2020-12-23T15:36", out: 16},
 	}
 	for i, test := range tests {
 		if out := parseISODateTimeLiteral([]byte(test.in)); out != test.out {
@@ -819,6 +820,9 @@ func TestDecodeISODateTime(t *testing.T) {
 		{in: "2020-12-23T15:36:00+01:00", out: 1608734160},
 		{in: "2020-12-23T15:36:00.123456+01:00", out: 1608734160.123456},
 		{in: "2020-12-23T15:36:60.123456+01:00", out: -1},
+		{in: "1970-01-01T00:00:00Z", out: 0},
+		{in: "1970-01-01T01:00:00+01:00", out: 0},
+		{in: "1970-01-01T00:00:00-01:00", out: 3600},
 	}
 	for i, test := range tests {
 		if out := decodeISODateTimeLiteral([]byte(test.in)); out != test.out {

@@ -645,20 +645,35 @@ func parseISODateTimeLiteral(v []byte) int {
 	if len(v) == 0 {
 		return n
 	}
-	if len(v) < 8 || !isIntDigit(v[0]) || !isIntDigit(v[1]) || !isIntDigit(v[3]) || !isIntDigit(v[4]) ||
-		!isIntDigit(v[6]) || !isIntDigit(v[7]) || v[2] != ':' || v[5] != ':' {
+	if len(v) < 5 || !isIntDigit(v[0]) || !isIntDigit(v[1]) || !isIntDigit(v[3]) || !isIntDigit(v[4]) || v[2] != ':' {
 		return n
 	}
-	if inRange(v[0], '3', '9') || (v[0] == '2' && inRange(v[1], '5', '9')) ||
-		inRange(v[3], '6', '9') || inRange(v[6], '7', '9') || (v[6] == '6' && inRange(v[7], '1', '9')) {
-		return -1
-	}
-	n += 8
-	v = v[8:]
+	n += 5
+	v = v[5:]
 	if len(v) == 0 {
 		return n
 	}
-	// optional decimals
+	if v[0] == 'Z' {
+		return n + 1
+	}
+	if v[0] != ':' {
+		return n
+	}
+	if len(v) < 3 || !isIntDigit(v[1]) || !isIntDigit(v[2]) {
+		return -1
+	}
+	n += 3
+	v = v[3:]
+	if len(v) == 0 {
+		return n
+	}
+	if v[0] == 'Z' {
+		return n + 1
+	}
+	if v[0] != '.' && v[0] != '+' && v[0] != '-' {
+		return n
+	}
+	// milli or micro seconds
 	if v[0] == '.' {
 		n++
 		v = v[1:]
@@ -682,8 +697,8 @@ func parseISODateTimeLiteral(v []byte) int {
 	if v[0] == '+' || v[0] == '-' {
 		n++
 		v = v[1:]
-		if len(v) < 5 || v[2] != ':' || !inRange(v[0], '0', '1') || !isIntDigit(v[1]) ||
-			!inRange(v[3], '0', '5') || !isIntDigit(v[4]) {
+		if len(v) < 5 || v[2] != ':' || !isIntDigit(v[0]) || !isIntDigit(v[1]) ||
+			!isIntDigit(v[3]) || !isIntDigit(v[4]) {
 			return -1
 		}
 		n += 5
@@ -700,12 +715,14 @@ func decodeISODateTimeLiteral(v []byte) float64 {
 		"2006-01-02T15:04:05.999999Z",
 		"2006-01-02T15:04:05.999Z",
 		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04Z",
 		"2006-01-02T15:04:05.999999-07:00",
 		"2006-01-02T15:04:05.999-07:00",
 		"2006-01-02T15:04:05-07:00",
 		"2006-01-02T15:04:05.000000",
 		"2006-01-02T15:04:05.000",
 		"2006-01-02T15:04:05",
+		"2006-01-02T15:04",
 		"2006-01-02T",
 	}
 	for _, layout := range layouts {
@@ -717,7 +734,11 @@ func decodeISODateTimeLiteral(v []byte) float64 {
 	if err != nil {
 		return -1
 	}
-	return float64(t.Unix()) + float64(t.Nanosecond())/1E9
+	x := float64(t.Unix()) + float64(t.Nanosecond())/1e9
+	if x < 0 {
+		return -1
+	}
+	return x
 }
 
 func (tk *numTokenizer) nextISODateTimeValue() bool {
