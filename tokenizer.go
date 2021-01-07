@@ -436,8 +436,22 @@ func (tk *tokenizer) singleQuotedString() ([]byte, *atError) {
 	}
 }
 
+// lenISODateTime is called when parsing a quoteless string and e->p.p[0] == ':'. It test
+// if the : bolongs to an ISO date time. If no, it returns 0, otherwise it returns the offset
+// to the first byte that doesn’t belong the the ISO date time.
+func (tk *tokenizer) lenISODateTime() int {
+	if tk.p[0] == ':' && tk.b >= 13 {
+		if n := parseISODateTimeLiteral(tk.in[tk.b-13:]); n > 13 {
+			return n - 13
+		}
+	}
+	return 0
+}
+
 // quotelessString include any valid characters until any of
 // , { } [ ] : \n \r\n // /*, the end of input or an error is met.
+// The : belonging to an ISO date time doesn’t terminate the
+// quoteless string.
 // The quoteless string is right trimmed of whitespace characters.
 // It return nil, nil, when the quoteles string is empty.
 func (tk *tokenizer) quotelessString() ([]byte, *atError) {
@@ -465,7 +479,13 @@ func (tk *tokenizer) quotelessString() ([]byte, *atError) {
 			if (tk.p[0] == '/' && len(tk.p) > 1 && (tk.p[1] == '/' || tk.p[1] == '*')) ||
 				newline(tk.p) != 0 || (tk.p[0] != '\r' && tk.p[0] != '/') {
 				// we met any of , { } [ ] # \n \r\n // /*
-				break
+				n := tk.lenISODateTime()
+				if n == 0 {
+					break
+				}
+				tk.popBytes(n)
+				endIdx = tk.b
+				continue
 			}
 		}
 		n, err := tk.char()

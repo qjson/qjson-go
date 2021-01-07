@@ -329,6 +329,9 @@ func TestQuotelessString(t *testing.T) {
 		{in: "a b   \r\n", out: []byte("a b"), p: pos{b: 6}},
 		{in: "a b   \r\n ", out: []byte("a b"), p: pos{b: 6}},
 		{in: "a b  /* ", out: []byte("a b"), p: pos{b: 5}},
+		// 10
+		{in: "1970-01-01T00:00  /* ", out: []byte("1970-01-01T00:00"), p: pos{b: 18}},
+		{in: "1970-01-01T00:00:00+00:00  /* ", out: []byte("1970-01-01T00:00:00+00:00"), p: pos{b: 27}},
 	}
 	for i, test := range tests {
 		tk.init([]byte(test.in))
