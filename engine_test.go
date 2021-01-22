@@ -235,6 +235,7 @@ func TestDecode(t *testing.T) {
 		// 45
 		{in: "a:{b:}", err: "unexpected } at line 1 col 6"},
 		{in: "a:b}", err: "unexpected } at line 1 col 4"},
+		{in: "a:\n`\\n\nthe `\\example`\\\n`", out: "{\"a\":\"the `example`\\n\"}"},
 	}
 
 	for i, test := range tests {

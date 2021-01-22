@@ -368,10 +368,10 @@ func (e *engine) outputMultilineString() {
 	str = str[1:] // skip \
 	var nl []byte
 	if str[0] == 'n' {
-		nl = []byte{'\n'}
+		nl = []byte("\\n")
 		str = str[1:]
 	} else {
-		nl = []byte{'\r', '\n'}
+		nl = []byte("\\r\\n")
 		str = str[3:]
 	}
 	for str[0] != '\n' {
@@ -409,6 +409,9 @@ func (e *engine) outputMultilineString() {
 			e.out.WriteByte('\\')
 			e.out.WriteByte('"')
 			str = str[1:]
+		} else if str[0] == '`' && len(str) > 1 && str[1] == '\\' {
+			e.out.WriteByte('`')
+			str = str[2:]
 		} else if str[0] == '\\' {
 			e.out.WriteByte('\\')
 			e.out.WriteByte('\\')
