@@ -6,6 +6,12 @@ import (
 	"strconv"
 )
 
+// Version returns the version of the code and the supported
+// syntax (e.g. "qjson-go: v0.1.1 syntax: v0.0.0").
+func Version() string {
+	return "qjson-go: v0.0.0 syntax: v0.0.0"
+}
+
 // Decode accept QJSON text as input and return a JSON text or return an error.
 func Decode(input []byte) ([]byte, error) {
 	if input == nil {
