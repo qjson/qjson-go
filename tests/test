@@ -1,0 +1,22 @@
+#!/bin/bash
+
+for qjsonFilename in *.qjson; do
+	filename=$(basename  "${qjsonFilename%.*}")
+	outFilename="${filename}.out"
+	gotFilename="${filename}.got"
+	qjson $qjsonFilename &> $gotFilename
+	diff $outFilename $gotFilename &> /dev/null
+	if [ $? -eq 0 ]; then
+		echo "$filename OK"
+		rm $gotFilename
+	else
+		echo "$filename failed! Expected: $outFilename, got: $gotFilename"
+	fi
+done
+
+failCount=$(find . -type f -name "*.got" | wc -l)
+echo "$failCount test failed"
+if [ $failCount -eq 0 ]; then
+    exit 0
+fi
+exit 1
