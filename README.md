@@ -50,7 +50,7 @@ Here is an example of usage:
 package main
 
 import (
-    "github.com/qjson/qjson-go"
+    "github.com/qjson/qjson-go/qjson"
     "io/ioutil"
     "os"
 )
